@@ -3,10 +3,11 @@
 const http=require('http');
 const fs=require('fs');
 const line=require('@line/bot-sdk');
+const path=require('path');
 
 const PORT=process.env.PORT || 8080;
 
-const data=json.parse(fs.readFileSync('../secret.json'));
+const data=JSON.parse(fs.readFileSync('../secret.json'));
 console.dir(data);
 
 const config={
@@ -18,19 +19,24 @@ const client=new line.Client(config);
 
 const server=http.createServer(function(req,res){
   try{
-
+    const request=path.normalize(decodeURI(req.url));
+    console.log(request);
     /*LINEbotからのアクセス*/
-    if(path.normalize(decodeURI(req.url))==='/callback' && req.method==='POST'){
-      const signature=req.headers['X-Line-Signature'];
-      console.dir(req.body.events[0]);
+    if(request==='/callback' && req.method==='POST'){
+
+      console.dir(req.headers);
       line.middleware(config);
 
-      Promise
-        .all(req.body.events.map(handlerEvent))
-        .then(function(result){
-          res.json(result);
-        });
-
+      let data='',body;
+      req.on('data',function(chunk){
+        data+=chunk;
+      });
+      req.on('end',function(chunk){
+        body=JSON.parse(data);
+        console.dir(body);
+        console.log('user id:'+body.events[0].source.userId);
+        handlerEvent(body.events[0]);
+      });
     }
 
   }catch(err){
@@ -38,7 +44,7 @@ const server=http.createServer(function(req,res){
   }
 });
 
-async function handlerEvent(event){
+function handlerEvent(event){
   if(event.type!=='message' || event.message.type!=='text'){
     return Promise.resolve(null);
   }
