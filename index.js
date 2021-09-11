@@ -8,7 +8,6 @@ const path=require('path');
 const PORT=process.env.PORT || 8080;
 
 const data=JSON.parse(fs.readFileSync('../secret.json'));
-console.dir(data);
 
 const config={
   channelAccessToken:data['channel_access_token'],
@@ -45,13 +44,12 @@ const server=http.createServer(function(req,res){
 });
 
 function handlerEvent(event){
-  if(event.type!=='message' || event.message.type!=='text'){
-    return Promise.resolve(null);
+  if(event.type==='message' && event.message.type==='text'){
+    return client.replyMessage(event.replyToken,{
+      type:'text',
+      text:event.message.text+'//'
+    });
   }
-  return client.replyMessage(event.replyToken,{
-    type:'text',
-    text:event.message.text+'//'
-  });
 }
 
 server.listen(PORT,function(){
