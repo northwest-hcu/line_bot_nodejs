@@ -45,10 +45,24 @@ const server=http.createServer(function(req,res){
 
 function handlerEvent(event){
   if(event.type==='message' && event.message.type==='text'){
-    return client.replyMessage(event.replyToken,{
-      type:'text',
-      text:event.message.text+'//'
-    });
+    let text=event.message.text+'//';
+    if(event.message.text==='温度'){
+      fs.readFile('/sys/class/thermal/thermal_zone0/temp','utf-8',function(err,data){
+        if(err){
+          console.log('handler err:'+err);
+        }
+        text='現在のCPU温度は '+(Number(data)/1000)+'° です。';
+        return client.replyMessage(event.replyToken,{
+          type:'text',
+          text:text
+        });
+      });
+    }else{
+      return client.replyMessage(event.replyToken,{
+        type:'text',
+        text:event.message.text+'//'
+      });
+    }
   }
 }
 
